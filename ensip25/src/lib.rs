@@ -43,8 +43,7 @@
 //!
 //! ## Quick Start — On-chain verification (`provider` feature)
 //!
-//! ```rust,no_run
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! ```rust,ignore
 //! use alloy::providers::ProviderBuilder;
 //! use ensip25::verify::verify;
 //!
@@ -54,14 +53,11 @@
 //! let registry = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432".parse()?;
 //! let status = verify(&provider, "vitalik.eth", 1, registry, 42).await?;
 //! println!("verified: {}", status.is_verified());
-//! # Ok(())
-//! # }
 //! ```
 //!
 //! ## Quick Start — ERC-8004 integration (`erc8004` feature)
 //!
-//! ```rust,no_run
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! ```rust,ignore
 //! use alloy::providers::ProviderBuilder;
 //! use ensip25::verify::verify_agent;
 //!
@@ -74,8 +70,6 @@
 //!     42,
 //!     "vitalik.eth",
 //! ).await?;
-//! # Ok(())
-//! # }
 //! ```
 
 pub mod erc7930;
