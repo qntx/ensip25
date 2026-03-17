@@ -37,5 +37,9 @@ name = "record_key"
 name = "verify"
 required-features = ["provider"]
 
+[[example]]
+name = "verify_erc8004"
+required-features = ["erc8004"]
+
 [lints]
 workspace = true
