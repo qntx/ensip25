@@ -11,6 +11,14 @@ repository = "https://github.com/qntx/ensip25"
 description = "Rust implementation of ENSIP-25: verify the link between ENS names and ERC-8004 AI agent registries."
 
 [workspace.dependencies]
+ensip25 = { version = "0.1", path = "ensip25" }
+
+alloy = { version = "1", features = ["full"] }
+alloy-ens = { version = "1", features = ["provider"] }
+alloy-primitives = "1"
+erc8004 = "0.3"
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
 
 [profile.release]
 codegen-units = 1
