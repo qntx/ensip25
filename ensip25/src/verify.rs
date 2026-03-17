@@ -10,10 +10,7 @@ use alloy::providers::Provider;
 use alloy_ens::ProviderEnsExt as _;
 use alloy_primitives::Address;
 
-use crate::{
-    error::Result,
-    record_key::evm_record_key,
-};
+use crate::{error::Result, record_key::evm_record_key};
 
 /// The result of an ENSIP-25 verification check.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -66,8 +63,7 @@ pub async fn verify<P: Provider>(
 
     match provider.lookup_txt(ens_name, &key).await {
         Ok(value) if !value.is_empty() => Ok(VerificationStatus::Verified),
-        Ok(_) => Ok(VerificationStatus::EnsRecordMissing),
-        Err(alloy_ens::EnsError::ResolveTxtRecord(_)) => {
+        Ok(_) | Err(alloy_ens::EnsError::ResolveTxtRecord(_)) => {
             Ok(VerificationStatus::EnsRecordMissing)
         }
         Err(e) => Err(e.into()),

@@ -92,7 +92,7 @@ fn validate_agent_id(agent_id: &str) -> Result<()> {
 mod tests {
     use super::*;
 
-    /// ENSIP-25 spec example: agent 167 in the ERC-8004 IdentityRegistry on
+    /// ENSIP-25 spec example: agent 167 in the ERC-8004 `IdentityRegistry` on
     /// Ethereum mainnet.
     #[test]
     fn ensip25_spec_example() {

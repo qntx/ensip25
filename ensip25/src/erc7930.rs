@@ -149,9 +149,7 @@ impl InteropAddress {
 
         buf.extend_from_slice(&self.version.to_be_bytes());
         buf.extend_from_slice(&self.chain_type.to_be_bytes());
-        buf.push(
-            u8::try_from(chain_ref_len).expect("chain_ref length exceeds u8::MAX"),
-        );
+        buf.push(u8::try_from(chain_ref_len).expect("chain_ref length exceeds u8::MAX"));
         buf.extend_from_slice(&self.chain_ref);
         buf.push(u8::try_from(addr_len).expect("address length exceeds u8::MAX"));
         buf.extend_from_slice(&self.address);
@@ -287,10 +285,9 @@ mod tests {
     /// Decode from hex string (with 0x prefix).
     #[test]
     fn from_hex_with_prefix() {
-        let ia = InteropAddress::from_hex(
-            "0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432",
-        )
-        .expect("decode ok");
+        let ia =
+            InteropAddress::from_hex("0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432")
+                .expect("decode ok");
         assert_eq!(ia.version, 0x0001);
         assert_eq!(ia.chain_type, 0x0000);
         assert_eq!(ia.evm_chain_id(), Some(1));
@@ -304,13 +301,12 @@ mod tests {
         );
     }
 
-    /// FromStr trait works.
+    /// `FromStr` trait works.
     #[test]
     fn from_str() {
-        let ia: InteropAddress =
-            "0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432"
-                .parse()
-                .expect("parse ok");
+        let ia: InteropAddress = "0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432"
+            .parse()
+            .expect("parse ok");
         assert!(ia.is_evm());
     }
 
@@ -345,7 +341,7 @@ mod tests {
         assert!(err.to_string().contains("empty"));
     }
 
-    /// ENSIP-25 example: ERC-8004 IdentityRegistry on Ethereum mainnet.
+    /// ENSIP-25 example: ERC-8004 `IdentityRegistry` on Ethereum mainnet.
     ///
     /// The spec says the text record key for agent 167 should use:
     /// `0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432`

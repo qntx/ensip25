@@ -84,7 +84,6 @@ pub mod record_key;
 #[cfg(feature = "provider")]
 pub mod verify;
 
-pub use error::{Error, Result};
-
 #[cfg(feature = "erc8004")]
 pub use erc8004;
+pub use error::{Error, Result};
