@@ -27,5 +27,15 @@ provider = ["dep:alloy", "dep:alloy-ens"]
 erc8004 = ["dep:erc8004", "provider"]
 serde = ["dep:serde"]
 
+[[example]]
+name = "erc7930_encode"
+
+[[example]]
+name = "record_key"
+
+[[example]]
+name = "verify"
+required-features = ["provider"]
+
 [lints]
 workspace = true
