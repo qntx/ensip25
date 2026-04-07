@@ -15,7 +15,7 @@ use alloy_primitives::Address;
 
 use crate::{
     erc7930::InteropAddress,
-    error::{Error, Result},
+    error::{Ensip25Error, Result},
 };
 
 /// Build an ENSIP-25 text record key from a pre-built [`InteropAddress`] and
@@ -23,7 +23,7 @@ use crate::{
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidAgentId`] if `agent_id` contains `[` or `]`.
+/// Returns [`Ensip25Error::InvalidAgentId`] if `agent_id` contains `[` or `]`.
 ///
 /// # Examples
 ///
@@ -45,7 +45,7 @@ pub fn record_key(registry: &InteropAddress, agent_id: &str) -> Result<String> {
     validate_agent_id(agent_id)?;
     Ok(format!(
         "agent-registration[{}][{agent_id}]",
-        registry.to_hex()
+        registry.to_hex()?
     ))
 }
 
@@ -56,7 +56,7 @@ pub fn record_key(registry: &InteropAddress, agent_id: &str) -> Result<String> {
 ///
 /// # Errors
 ///
-/// Returns [`Error::InvalidAgentId`] if `agent_id` contains `[` or `]`.
+/// Returns [`Ensip25Error::InvalidAgentId`] if `agent_id` contains `[` or `]`.
 ///
 /// # Examples
 ///
@@ -81,7 +81,7 @@ pub fn evm_record_key(chain_id: u64, registry: Address, agent_id: u64) -> Result
 /// Validate that an agent ID does not contain forbidden characters.
 fn validate_agent_id(agent_id: &str) -> Result<()> {
     if agent_id.contains('[') || agent_id.contains(']') {
-        return Err(Error::InvalidAgentId {
+        return Err(Ensip25Error::InvalidAgentId {
             agent_id: agent_id.to_owned(),
         });
     }

@@ -8,10 +8,16 @@
 //! - Registry: ERC-8004 `IdentityRegistry` on Ethereum Mainnet
 
 use alloy::providers::ProviderBuilder;
+use alloy_ens as _;
 use alloy_primitives::address;
 use ensip25::verify::verify;
+#[cfg(feature = "erc8004")]
+use erc8004 as _;
+#[cfg(feature = "serde")]
+use serde as _;
+use thiserror as _;
 
-#[allow(clippy::print_stdout)]
+#[expect(clippy::print_stdout, reason = "example demonstrates CLI output")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Connect to Ethereum mainnet

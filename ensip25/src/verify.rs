@@ -14,6 +14,7 @@ use crate::{error::Result, record_key::evm_record_key};
 
 /// The result of an ENSIP-25 verification check.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum VerificationStatus {
     /// The ENS name has the `agent-registration[…][…]` text record set to a
     /// non-empty value — the association is confirmed.

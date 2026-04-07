@@ -80,4 +80,6 @@ pub mod verify;
 
 #[cfg(feature = "erc8004")]
 pub use erc8004;
-pub use error::{Error, Result};
+pub use error::{Ensip25Error, Result};
+#[cfg(test)]
+use tokio as _;

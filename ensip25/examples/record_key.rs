@@ -10,8 +10,19 @@
 use alloy_primitives::address;
 use ensip25::record_key::evm_record_key;
 
-#[allow(clippy::print_stdout)]
-fn main() {
+#[cfg(feature = "provider")]
+use alloy as _;
+#[cfg(feature = "provider")]
+use alloy_ens as _;
+#[cfg(feature = "erc8004")]
+use erc8004 as _;
+#[cfg(feature = "serde")]
+use serde as _;
+use thiserror as _;
+use tokio as _;
+
+#[expect(clippy::print_stdout, reason = "example demonstrates CLI output")]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Official ENSIP-25 test data
     // ENS Name: ens-registration-agent.ses.eth
     // Agent ID: 26433
@@ -21,14 +32,16 @@ fn main() {
     let agent_id = 26433u64;
 
     // Build the ENSIP-25 text record key
-    let key = evm_record_key(chain_id, registry, agent_id).expect("valid key");
+    let key = evm_record_key(chain_id, registry, agent_id)?;
 
     println!("Text record key: {key}");
 
     // Verify against official ENSIP-25 example
-    assert_eq!(
-        key,
-        "agent-registration[0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432][26433]"
-    );
+    if key != "agent-registration[0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432][26433]"
+    {
+        return Err("record key does not match official ENSIP-25 example".into());
+    }
     println!("✓ Matches official ENSIP-25 example");
+
+    Ok(())
 }

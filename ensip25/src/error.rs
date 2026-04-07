@@ -2,7 +2,7 @@
 
 /// The primary error type for all ENSIP-25 SDK operations.
 #[derive(Debug, thiserror::Error)]
-pub enum Error {
+pub enum Ensip25Error {
     /// The input bytes are too short to contain a valid ERC-7930 header.
     #[error("erc7930: buffer too short (need at least 6 bytes, got {len})")]
     BufferTooShort {
@@ -35,6 +35,15 @@ pub enum Error {
     #[error("hex decode error: {0}")]
     Hex(#[from] alloy_primitives::hex::FromHexError),
 
+    /// A field exceeds the 255-byte limit imposed by ERC-7930.
+    #[error("erc7930: {field} length {len} exceeds 255")]
+    FieldTooLong {
+        /// Name of the field that is too long.
+        field: &'static str,
+        /// Actual length.
+        len: usize,
+    },
+
     /// An `agentId` contains forbidden characters (`[` or `]`).
     #[error("agent id must not contain '[' or ']': {agent_id:?}")]
     InvalidAgentId {
@@ -54,4 +63,4 @@ pub enum Error {
 }
 
 /// A convenience type alias used throughout the SDK.
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = core::result::Result<T, Ensip25Error>;

@@ -20,7 +20,7 @@ use core::fmt;
 
 use alloy_primitives::{Address, hex};
 
-use crate::error::{Error, Result};
+use crate::error::{Ensip25Error, Result};
 
 /// Current ERC-7930 version.
 const VERSION_1: u16 = 0x0001;
@@ -34,6 +34,7 @@ const CHAIN_TYPE_EVM: u16 = 0x0000;
 /// the specification. Use [`InteropAddress::evm`] for the common EVM case or
 /// [`InteropAddress::decode`] to parse raw bytes.
 #[derive(Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InteropAddress {
     /// Protocol version (`0x0001` for v1).
     pub version: u16,
@@ -81,41 +82,54 @@ impl InteropAddress {
     /// version.
     pub fn decode(bytes: &[u8]) -> Result<Self> {
         // Minimum: version(2) + chain_type(2) + chain_ref_len(1) + addr_len(1) = 6
-        if bytes.len() < 6 {
-            return Err(Error::BufferTooShort { len: bytes.len() });
-        }
+        let header: &[u8; 6] = bytes
+            .get(..6)
+            .and_then(|s| s.try_into().ok())
+            .ok_or(Ensip25Error::BufferTooShort { len: bytes.len() })?;
 
-        let version = u16::from_be_bytes([bytes[0], bytes[1]]);
+        let version = u16::from_be_bytes([header[0], header[1]]);
         if version != VERSION_1 {
-            return Err(Error::UnsupportedVersion { version });
+            return Err(Ensip25Error::UnsupportedVersion { version });
         }
 
-        let chain_type = u16::from_be_bytes([bytes[2], bytes[3]]);
-        let chain_ref_len = bytes[4] as usize;
+        let chain_type = u16::from_be_bytes([header[2], header[3]]);
+        let chain_ref_len = header[4] as usize;
 
         let addr_len_offset = 5 + chain_ref_len;
-        if bytes.len() < addr_len_offset + 1 {
-            return Err(Error::TruncatedPayload {
+        let &addr_len_byte = bytes
+            .get(addr_len_offset)
+            .ok_or(Ensip25Error::TruncatedPayload {
                 expected: addr_len_offset + 1,
                 available: bytes.len(),
-            });
-        }
+            })?;
+        let addr_len = addr_len_byte as usize;
 
-        let addr_len = bytes[addr_len_offset] as usize;
         let total = addr_len_offset + 1 + addr_len;
         if bytes.len() < total {
-            return Err(Error::TruncatedPayload {
+            return Err(Ensip25Error::TruncatedPayload {
                 expected: total,
                 available: bytes.len(),
             });
         }
 
         if chain_ref_len == 0 && addr_len == 0 {
-            return Err(Error::EmptyAddress);
+            return Err(Ensip25Error::EmptyAddress);
         }
 
-        let chain_ref = bytes[5..5 + chain_ref_len].to_vec();
-        let address = bytes[addr_len_offset + 1..total].to_vec();
+        let chain_ref = bytes
+            .get(5..5 + chain_ref_len)
+            .ok_or(Ensip25Error::TruncatedPayload {
+                expected: 5 + chain_ref_len,
+                available: bytes.len(),
+            })?
+            .to_vec();
+        let address = bytes
+            .get(addr_len_offset + 1..total)
+            .ok_or(Ensip25Error::TruncatedPayload {
+                expected: total,
+                available: bytes.len(),
+            })?
+            .to_vec();
 
         Ok(Self {
             version,
@@ -138,29 +152,40 @@ impl InteropAddress {
 
     /// Encode this interoperable address to raw bytes.
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if `chain_ref` or `address` length exceeds 255 bytes.
-    #[must_use]
-    pub fn encode(&self) -> Vec<u8> {
-        let chain_ref_len = self.chain_ref.len();
-        let addr_len = self.address.len();
-        let mut buf = Vec::with_capacity(6 + chain_ref_len + addr_len);
+    /// Returns [`Ensip25Error::FieldTooLong`] if `chain_ref` or `address`
+    /// length exceeds 255 bytes.
+    pub fn encode(&self) -> Result<Vec<u8>> {
+        let chain_ref_len =
+            u8::try_from(self.chain_ref.len()).map_err(|_| Ensip25Error::FieldTooLong {
+                field: "chain_ref",
+                len: self.chain_ref.len(),
+            })?;
+        let addr_len =
+            u8::try_from(self.address.len()).map_err(|_| Ensip25Error::FieldTooLong {
+                field: "address",
+                len: self.address.len(),
+            })?;
 
+        let mut buf = Vec::with_capacity(6 + usize::from(chain_ref_len) + usize::from(addr_len));
         buf.extend_from_slice(&self.version.to_be_bytes());
         buf.extend_from_slice(&self.chain_type.to_be_bytes());
-        buf.push(u8::try_from(chain_ref_len).expect("chain_ref length exceeds u8::MAX"));
+        buf.push(chain_ref_len);
         buf.extend_from_slice(&self.chain_ref);
-        buf.push(u8::try_from(addr_len).expect("address length exceeds u8::MAX"));
+        buf.push(addr_len);
         buf.extend_from_slice(&self.address);
 
-        buf
+        Ok(buf)
     }
 
     /// Format as a lowercase hex string **with** `0x` prefix.
-    #[must_use]
-    pub fn to_hex(&self) -> String {
-        format!("0x{}", hex::encode(self.encode()))
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if encoding fails (field length exceeds 255).
+    pub fn to_hex(&self) -> Result<String> {
+        Ok(format!("0x{}", hex::encode(self.encode()?)))
     }
 
     /// Returns `true` if this is an EVM-type address (chain type `0x0000`).
@@ -179,7 +204,7 @@ impl InteropAddress {
         }
         let mut padded = [0u8; 8];
         let offset = 8 - self.chain_ref.len();
-        padded[offset..].copy_from_slice(&self.chain_ref);
+        padded.get_mut(offset..)?.copy_from_slice(&self.chain_ref);
         Some(u64::from_be_bytes(padded))
     }
 
@@ -209,12 +234,12 @@ impl fmt::Debug for InteropAddress {
 
 impl fmt::Display for InteropAddress {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.to_hex())
+        f.write_str(&self.to_hex().map_err(|_| fmt::Error)?)
     }
 }
 
 impl core::str::FromStr for InteropAddress {
-    type Err = Error;
+    type Err = Ensip25Error;
 
     fn from_str(s: &str) -> Result<Self> {
         Self::from_hex(s)
@@ -228,7 +253,7 @@ fn minimal_be_bytes(value: u64) -> Vec<u8> {
     }
     let bytes = value.to_be_bytes();
     let skip = bytes.iter().position(|&b| b != 0).unwrap_or(7);
-    bytes[skip..].to_vec()
+    bytes.get(skip..).map_or_else(|| vec![0], <[u8]>::to_vec)
 }
 
 #[cfg(test)]
@@ -247,7 +272,7 @@ mod tests {
             .expect("valid address");
         let ia = InteropAddress::evm(1, addr);
         assert_eq!(
-            ia.to_hex(),
+            ia.to_hex().expect("encode ok"),
             "0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432"
         );
     }
@@ -264,7 +289,7 @@ mod tests {
             .expect("valid address");
         let ia = InteropAddress::evm_no_chain(addr);
         assert_eq!(
-            ia.to_hex(),
+            ia.to_hex().expect("encode ok"),
             "0x000100000014d8da6bf26964af9d7eed9e03e53415d37aa96045"
         );
     }
@@ -276,10 +301,13 @@ mod tests {
             .parse()
             .expect("valid address");
         let original = InteropAddress::evm(1, addr);
-        let bytes = original.encode();
+        let bytes = original.encode().expect("encode ok");
         let decoded = InteropAddress::decode(&bytes).expect("decode ok");
         assert_eq!(original, decoded);
-        assert_eq!(original.to_hex(), decoded.to_hex());
+        assert_eq!(
+            original.to_hex().expect("encode ok"),
+            decoded.to_hex().expect("encode ok")
+        );
     }
 
     /// Decode from hex string (with 0x prefix).
@@ -317,7 +345,7 @@ mod tests {
             .parse()
             .expect("valid address");
         let ia = InteropAddress::evm(1, addr);
-        assert_eq!(format!("{ia}"), ia.to_hex());
+        assert_eq!(format!("{ia}"), ia.to_hex().expect("encode ok"));
     }
 
     /// Too-short buffer is rejected.
@@ -352,7 +380,7 @@ mod tests {
             .expect("valid");
         let ia = InteropAddress::evm(1, registry);
         assert_eq!(
-            ia.to_hex(),
+            ia.to_hex().expect("encode ok"),
             "0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432"
         );
     }

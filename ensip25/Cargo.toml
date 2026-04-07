@@ -18,7 +18,6 @@ erc8004 = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
 
 [dev-dependencies]
-alloy = { workspace = true, features = ["node-bindings"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [features]

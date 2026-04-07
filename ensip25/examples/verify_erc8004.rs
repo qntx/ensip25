@@ -12,9 +12,14 @@
 //! `erc8004::Network` enum.
 
 use alloy::providers::ProviderBuilder;
+use alloy_ens as _;
+use alloy_primitives as _;
 use ensip25::verify::verify_agent;
+#[cfg(feature = "serde")]
+use serde as _;
+use thiserror as _;
 
-#[allow(clippy::print_stdout)]
+#[expect(clippy::print_stdout, reason = "example demonstrates CLI output")]
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Connect to Ethereum mainnet
