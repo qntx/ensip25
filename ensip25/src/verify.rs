@@ -32,6 +32,15 @@ impl VerificationStatus {
     }
 }
 
+impl core::fmt::Display for VerificationStatus {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Verified => f.write_str("verified"),
+            Self::EnsRecordMissing => f.write_str("ENS record missing"),
+        }
+    }
+}
+
 /// Verify the ENSIP-25 link from an EVM registry entry to an ENS name.
 ///
 /// This performs step 2-4 of the ENSIP-25 verification flow:

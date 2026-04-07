@@ -36,14 +36,10 @@ const CHAIN_TYPE_EVM: u16 = 0x0000;
 #[derive(Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InteropAddress {
-    /// Protocol version (`0x0001` for v1).
-    pub version: u16,
-    /// CASA namespace identifier (e.g. `0x0000` for EVM).
-    pub chain_type: u16,
-    /// Binary chain reference (e.g. big-endian chain ID for EVM).
-    pub chain_ref: Vec<u8>,
-    /// Binary address (e.g. 20-byte EVM address).
-    pub address: Vec<u8>,
+    version: u16,
+    chain_type: u16,
+    chain_ref: Vec<u8>,
+    address: Vec<u8>,
 }
 
 impl InteropAddress {
@@ -51,6 +47,17 @@ impl InteropAddress {
     ///
     /// The chain ID is encoded as a minimal big-endian integer (no leading
     /// zero bytes), matching the ERC-7930 / CAIP-350 EVM profile.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ensip25::erc7930::InteropAddress;
+    /// use alloy_primitives::address;
+    ///
+    /// let ia = InteropAddress::evm(1, address!("8004A169FB4a3325136EB29fA0ceB6D2e539a432"));
+    /// assert!(ia.is_evm());
+    /// assert_eq!(ia.evm_chain_id(), Some(1));
+    /// ```
     #[must_use]
     pub fn evm(chain_id: u64, address: Address) -> Self {
         Self {
@@ -72,6 +79,30 @@ impl InteropAddress {
             chain_ref: Vec::new(),
             address: address.to_vec(),
         }
+    }
+
+    /// Returns the protocol version.
+    #[must_use]
+    pub const fn version(&self) -> u16 {
+        self.version
+    }
+
+    /// Returns the CASA namespace identifier (e.g. `0x0000` for EVM).
+    #[must_use]
+    pub const fn chain_type(&self) -> u16 {
+        self.chain_type
+    }
+
+    /// Returns the binary chain reference bytes.
+    #[must_use]
+    pub fn chain_ref(&self) -> &[u8] {
+        &self.chain_ref
+    }
+
+    /// Returns the binary address bytes.
+    #[must_use]
+    pub fn address_bytes(&self) -> &[u8] {
+        &self.address
     }
 
     /// Decode an interoperable address from raw bytes.
@@ -189,6 +220,16 @@ impl InteropAddress {
     }
 
     /// Returns `true` if this is an EVM-type address (chain type `0x0000`).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ensip25::erc7930::InteropAddress;
+    /// use alloy_primitives::address;
+    ///
+    /// let ia = InteropAddress::evm(1, address!("8004A169FB4a3325136EB29fA0ceB6D2e539a432"));
+    /// assert!(ia.is_evm());
+    /// ```
     #[must_use]
     pub const fn is_evm(&self) -> bool {
         self.chain_type == CHAIN_TYPE_EVM
@@ -197,6 +238,16 @@ impl InteropAddress {
     /// Try to extract the EVM chain ID from the chain reference.
     ///
     /// Returns `None` if the chain reference is empty or longer than 8 bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ensip25::erc7930::InteropAddress;
+    /// use alloy_primitives::address;
+    ///
+    /// let ia = InteropAddress::evm(1, address!("8004A169FB4a3325136EB29fA0ceB6D2e539a432"));
+    /// assert_eq!(ia.evm_chain_id(), Some(1));
+    /// ```
     #[must_use]
     pub fn evm_chain_id(&self) -> Option<u64> {
         if self.chain_ref.is_empty() || self.chain_ref.len() > 8 {
@@ -211,6 +262,17 @@ impl InteropAddress {
     /// Try to extract the 20-byte EVM address.
     ///
     /// Returns `None` if the address is not exactly 20 bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ensip25::erc7930::InteropAddress;
+    /// use alloy_primitives::address;
+    ///
+    /// let addr = address!("8004A169FB4a3325136EB29fA0ceB6D2e539a432");
+    /// let ia = InteropAddress::evm(1, addr);
+    /// assert_eq!(ia.evm_address(), Some(addr));
+    /// ```
     #[must_use]
     pub fn evm_address(&self) -> Option<Address> {
         if self.address.len() == 20 {
@@ -234,7 +296,12 @@ impl fmt::Debug for InteropAddress {
 
 impl fmt::Display for InteropAddress {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.to_hex().map_err(|_| fmt::Error)?)
+        let bytes = self.encode().map_err(|_| fmt::Error)?;
+        f.write_str("0x")?;
+        for b in bytes {
+            write!(f, "{b:02x}")?;
+        }
+        Ok(())
     }
 }
 
@@ -246,13 +313,21 @@ impl core::str::FromStr for InteropAddress {
     }
 }
 
+impl TryFrom<&[u8]> for InteropAddress {
+    type Error = Ensip25Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self> {
+        Self::decode(bytes)
+    }
+}
+
 /// Encode a `u64` as minimal big-endian bytes (no leading zeros).
 fn minimal_be_bytes(value: u64) -> Vec<u8> {
     if value == 0 {
         return vec![0];
     }
     let bytes = value.to_be_bytes();
-    let skip = bytes.iter().position(|&b| b != 0).unwrap_or(7);
+    let skip = bytes.iter().position(|&b| b != 0).unwrap_or(0);
     bytes.get(skip..).map_or_else(|| vec![0], <[u8]>::to_vec)
 }
 
@@ -316,8 +391,8 @@ mod tests {
         let ia =
             InteropAddress::from_hex("0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432")
                 .expect("decode ok");
-        assert_eq!(ia.version, 0x0001);
-        assert_eq!(ia.chain_type, 0x0000);
+        assert_eq!(ia.version(), 0x0001);
+        assert_eq!(ia.chain_type(), 0x0000);
         assert_eq!(ia.evm_chain_id(), Some(1));
         assert_eq!(
             ia.evm_address(),
@@ -393,5 +468,50 @@ mod tests {
         assert_eq!(minimal_be_bytes(255), vec![255]);
         assert_eq!(minimal_be_bytes(256), vec![1, 0]);
         assert_eq!(minimal_be_bytes(11_155_111), vec![0xAA, 0x36, 0xA7]);
+    }
+
+    /// `TryFrom<&[u8]>` delegates to `decode`.
+    #[test]
+    fn try_from_bytes() {
+        let addr: Address = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+            .parse()
+            .expect("valid address");
+        let original = InteropAddress::evm(1, addr);
+        let bytes = original.encode().expect("encode ok");
+        let decoded = InteropAddress::try_from(bytes.as_slice()).expect("decode ok");
+        assert_eq!(original, decoded);
+    }
+
+    /// `evm_no_chain` produces `None` for `evm_chain_id`.
+    #[test]
+    fn evm_no_chain_accessors() {
+        let addr: Address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+            .parse()
+            .expect("valid address");
+        let ia = InteropAddress::evm_no_chain(addr);
+        assert!(ia.is_evm());
+        assert_eq!(ia.evm_chain_id(), None);
+        assert_eq!(ia.evm_address(), Some(addr));
+        assert!(ia.chain_ref().is_empty());
+    }
+
+    /// Truncated payload (`chain_ref` declared but missing).
+    #[test]
+    fn decode_truncated_chain_ref() {
+        // version=1, chain_type=0, chain_ref_len=5, but only 0 bytes follow
+        let err = InteropAddress::decode(&[0, 1, 0, 0, 5, 0]).unwrap_err();
+        assert!(err.to_string().contains("truncated"));
+    }
+
+    /// Large chain ID roundtrips correctly.
+    #[test]
+    fn large_chain_id_roundtrip() {
+        let addr: Address = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+            .parse()
+            .expect("valid address");
+        let ia = InteropAddress::evm(u64::MAX, addr);
+        let bytes = ia.encode().expect("encode ok");
+        let decoded = InteropAddress::decode(&bytes).expect("decode ok");
+        assert_eq!(decoded.evm_chain_id(), Some(u64::MAX));
     }
 }

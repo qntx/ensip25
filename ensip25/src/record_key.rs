@@ -129,6 +129,37 @@ mod tests {
         assert!(record_key(&ia, "foo[bar]").is_err());
     }
 
+    /// Agent ID with only `[` is rejected.
+    #[test]
+    fn invalid_agent_id_open_bracket() {
+        let registry: Address = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+            .parse()
+            .expect("valid");
+        let ia = InteropAddress::evm(1, registry);
+        assert!(record_key(&ia, "foo[").is_err());
+    }
+
+    /// Agent ID with only `]` is rejected.
+    #[test]
+    fn invalid_agent_id_close_bracket() {
+        let registry: Address = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+            .parse()
+            .expect("valid");
+        let ia = InteropAddress::evm(1, registry);
+        assert!(record_key(&ia, "]bar").is_err());
+    }
+
+    /// Empty agent ID is accepted (valid per spec).
+    #[test]
+    fn empty_agent_id_is_valid() {
+        let registry: Address = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+            .parse()
+            .expect("valid");
+        let ia = InteropAddress::evm(1, registry);
+        let key = record_key(&ia, "").expect("valid key");
+        assert!(key.ends_with("[]"));
+    }
+
     /// Generic `record_key` with a pre-built `InteropAddress`.
     #[test]
     fn generic_record_key() {

@@ -7,13 +7,12 @@
 //! - Agent ID: `26433`
 //! - Registry: ERC-8004 `IdentityRegistry` on Ethereum Mainnet
 
-use alloy_primitives::address;
-use ensip25::record_key::evm_record_key;
-
 #[cfg(feature = "provider")]
 use alloy as _;
 #[cfg(feature = "provider")]
 use alloy_ens as _;
+use alloy_primitives::address;
+use ensip25::record_key::evm_record_key;
 #[cfg(feature = "erc8004")]
 use erc8004 as _;
 #[cfg(feature = "serde")]

@@ -6,13 +6,12 @@
 //! - Registry: ERC-8004 `IdentityRegistry` on Ethereum Mainnet
 //! - Expected: `0x000100000101148004a169fb4a3325136eb29fa0ceb6d2e539a432`
 
-use alloy_primitives::address;
-use ensip25::erc7930::InteropAddress;
-
 #[cfg(feature = "provider")]
 use alloy as _;
 #[cfg(feature = "provider")]
 use alloy_ens as _;
+use alloy_primitives::address;
+use ensip25::erc7930::InteropAddress;
 #[cfg(feature = "erc8004")]
 use erc8004 as _;
 #[cfg(feature = "serde")]
@@ -45,15 +44,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Access individual fields
     println!("\nParsed fields:");
-    println!("  Version: {:#06x}", addr.version);
-    println!("  Chain type: {} (EVM)", addr.chain_type);
+    println!("  Version: {:#06x}", addr.version());
+    println!("  Chain type: {} (EVM)", addr.chain_type());
     println!(
         "  Chain ref: 0x{} (chain_id = 1)",
-        alloy_primitives::hex::encode(&addr.chain_ref)
+        alloy_primitives::hex::encode(addr.chain_ref())
     );
     println!(
         "  Address: 0x{}",
-        alloy_primitives::hex::encode(&addr.address)
+        alloy_primitives::hex::encode(addr.address_bytes())
     );
 
     Ok(())

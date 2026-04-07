@@ -1,4 +1,10 @@
-# ensip25
+<!-- markdownlint-disable MD033 MD041 MD036 -->
+
+<div align="center">
+
+# ENSIP-25
+
+**ENS Identity Verification for AI Agents**
 
 [![CI][ci-badge]][ci-url]
 [![crates.io][crate-badge]][crate-url]
@@ -17,7 +23,13 @@
 [rust-badge]: https://img.shields.io/badge/rust-edition%202024-orange.svg
 [rust-url]: https://doc.rust-lang.org/edition-guide/
 
-**Type-safe Rust SDK for [ENSIP-25](https://docs.ens.domains/ensip/25) — verify the bidirectional link between ENS names and AI agent identities registered in on-chain registries such as [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004).**
+Type-safe Rust SDK for [ENSIP-25](https://docs.ens.domains/ensip/25) — verify the bidirectional link between ENS names and AI agent identities registered in on-chain registries such as [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004).
+
+[Quick Start](#quick-start) | [Architecture](#architecture) | [API docs][doc-url]
+
+</div>
+
+## Overview
 
 ENSIP-25 defines a parameterized ENS text record that links an ENS name to an agent registry entry:
 
@@ -25,7 +37,7 @@ ENSIP-25 defines a parameterized ENS text record that links an ENS name to an ag
 agent-registration[<registry>][<agentId>]
 ```
 
-This SDK provides:
+This SDK provides type-safe Rust bindings for the protocol, built on [alloy](https://github.com/alloy-rs/alloy):
 
 - **ERC-7930 encoding/decoding** — compact binary interoperable addresses
 - **Text record key construction** — deterministic ENSIP-25 key formatting
@@ -92,7 +104,7 @@ let status = verify_agent(
 ## Feature Flags
 
 | Feature | Default | Description |
-|---------|---------|-------------|
+| --- | --- | --- |
 | `provider` | off | Enables `verify` module with on-chain ENS lookup via alloy |
 | `erc8004` | off | Adds `verify_agent` convenience + re-exports `erc8004` crate (implies `provider`) |
 | `serde` | off | Derives `Serialize` / `Deserialize` on core types |
@@ -103,6 +115,13 @@ let status = verify_agent(
 - **Provider-generic** — works with any alloy transport (HTTP, WebSocket, IPC)
 - **Strict linting** — `pedantic` + `nursery` + `correctness` (deny)
 - **Spec-compliant** — test vectors derived from ENSIP-25 and ERC-7930 specification examples
+
+## Related Standards
+
+| Standard | Relationship |
+| --- | --- |
+| [ERC-7930](https://eips.ethereum.org/EIPS/eip-7930) | Interoperable Address — compact binary encoding for cross-chain addresses |
+| [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) | Trustless Agents — on-chain agent registry, composable with ENSIP-25 verification |
 
 ## License
 
