@@ -59,7 +59,7 @@ pub enum Ensip25Error {
     /// An ERC-8004 SDK error.
     #[cfg(feature = "erc8004")]
     #[error("erc8004 error: {0}")]
-    Erc8004(#[from] erc8004::Error),
+    Erc8004(#[from] erc8004::Erc8004Error),
 }
 
 /// A convenience type alias used throughout the SDK.

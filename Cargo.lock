@@ -1645,7 +1645,7 @@ dependencies = [
 
 [[package]]
 name = "ensip25"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "alloy",
  "alloy-ens",
@@ -1684,9 +1684,9 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "erc8004"
-version = "0.3.4"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31f27d1e3fc62db4b0208ae5387181209b6b7e636e5bdc155a25c680aecfdd6a"
+checksum = "cb10935bc8685d65c16e98d4c1b53fbd212e240e527ccee7324130634ba532d0"
 dependencies = [
  "alloy",
  "serde",
