@@ -4,15 +4,15 @@ default-members = ["ensip25"]
 resolver = "3"
 
 [workspace.package]
-version = "0.4.2"
+version = "0.4.3"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/qntx/ensip25"
 description = "Rust implementation of ENSIP-25: verify the link between ENS names and ERC-8004 AI agent registries."
 
 [workspace.dependencies]
-alloy = { version = "2.0.0", features = ["full"] }
-alloy-ens = { version = "2.0.0", features = ["provider"] }
+alloy = { version = "2.0.1", features = ["full"] }
+alloy-ens = { version = "2.0.1", features = ["provider"] }
 alloy-primitives = "1.5.7"
 erc8004 = "0.4.0"
 serde = { version = "1.0.228", features = ["derive"] }
