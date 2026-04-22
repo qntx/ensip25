@@ -2178,7 +2178,7 @@ dependencies = [
 
 [[package]]
 name = "ensip25"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "alloy 2.0.1",
  "alloy-ens",

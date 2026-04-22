@@ -12,8 +12,8 @@
 [![License][license-badge]][license-url]
 [![Rust][rust-badge]][rust-url]
 
-[ci-badge]: https://github.com/qntx/ensip25/actions/workflows/rust.yml/badge.svg
-[ci-url]: https://github.com/qntx/ensip25/actions/workflows/rust.yml
+[ci-badge]: https://github.com/qntx/ensip25/actions/workflows/ci.yml/badge.svg
+[ci-url]: https://github.com/qntx/ensip25/actions/workflows/ci.yml
 [crate-badge]: https://img.shields.io/crates/v/ensip25.svg
 [crate-url]: https://crates.io/crates/ensip25
 [doc-badge]: https://img.shields.io/docsrs/ensip25.svg
